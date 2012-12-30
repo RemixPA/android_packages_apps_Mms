@@ -776,5 +776,10 @@
     <!-- In message list items, this string builds the timestamp line when the message is in a group [CHAR LIMIT=NONE] -->
     <string name="message_timestamp_format"><xliff:g id="string" example="Fred Flinstone">%1$s</xliff:g>\u0020-\u0020<xliff:g id="string" example="9:39AM">%2$s</xliff:g></string>
 
+    <!-- Gray hint displayed in the search field in Contacts when empty -->
+    <string name="search_bar_hint">Search contacts</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="select_all">All</string>
 </resources>
 
