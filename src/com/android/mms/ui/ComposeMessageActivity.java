@@ -179,6 +179,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -214,6 +215,7 @@ public class ComposeMessageActivity extends Activity
     public static final int REQUEST_CODE_ADD_CONTACT      = 108;
     public static final int REQUEST_CODE_PICK             = 109;
     public static final int REQUEST_CODE_INSERT_CONTACT_INFO = 110;
+    public static final int REQUEST_CODE_ADD_RECIPIENTS   = 111;
 
     private static final String TAG = "Mms/compose";
 
@@ -257,14 +259,13 @@ public class ComposeMessageActivity extends Activity
     private static final int MENU_INSERT_EMOJI          = 33;
     private static final int MENU_ADD_TEMPLATE          = 34;
     private static final int MENU_ADD_TO_BLACKLIST      = 35;
+    private static final int MENU_ADD_TO_CALENDAR       = 35;
+    private static final int MENU_RESEND                = 36;
 
     private static final int DIALOG_TEMPLATE_SELECT     = 1;
     private static final int DIALOG_TEMPLATE_NOT_AVAILABLE = 2;
     private static final int LOAD_TEMPLATE_BY_ID        = 0;
     private static final int LOAD_TEMPLATES             = 1;
-
-    // Add SMS to calendar reminder
-    private static final int MENU_ADD_TO_CALENDAR       = 35;
 
     private static final int RECIPIENTS_MAX_LENGTH = 312;
 
@@ -330,6 +331,7 @@ public class ComposeMessageActivity extends Activity
 
     private RecipientsEditor mRecipientsEditor;  // UI control for editing recipients
     private ImageButton mRecipientsPicker;       // UI control for recipients picker
+    private ImageButton mRecipientsSelector;     // UI control for recipients selector
 
     // For HW keyboard, 'mIsKeyboardOpen' indicates if the HW keyboard is open.
     // For SW keyboard, 'mIsKeyboardOpen' should always be true.
@@ -383,6 +385,9 @@ public class ComposeMessageActivity extends Activity
                                             // If the value >= 0, then we jump to that line. If the
                                             // value is maxint, then we jump to the end.
     private long mLastMessageId;
+
+    //record the resend sms recipient when the sms send to more than one recipient
+    private String mResendSmsRecipient;
 
     // Add SMS to calendar reminder
     private static final String CALENDAR_EVENT_TYPE = "vnd.android.cursor.item/event";
@@ -1149,6 +1154,12 @@ public class ComposeMessageActivity extends Activity
                         .setOnMenuItemClickListener(l);
             }
 
+            //only failed send message have resend function
+            if (msgItem.isFailedMessage()) {
+                    menu.add(0, MENU_RESEND, 0, R.string.menu_resend)
+                            .setOnMenuItemClickListener(l);
+            }
+
             if (msgItem.isMms()) {
                 switch (msgItem.mBoxId) {
                     case Mms.MESSAGE_BOX_INBOX:
@@ -1365,6 +1376,35 @@ public class ComposeMessageActivity extends Activity
         }, R.string.building_slideshow_title);
     }
 
+    private void resendMessage(MessageItem msgItem) {
+        if (msgItem.isMms()) {
+            //if it is mms, we delete current mms and use current mms
+            //uri to create new working message object.
+            WorkingMessage newWorkingMessage = WorkingMessage.load(this, msgItem.mMessageUri);
+            if (newWorkingMessage == null)
+                return;
+
+            // Discard the current message in progress.
+            mWorkingMessage.discard();
+
+            mWorkingMessage = newWorkingMessage;
+            mWorkingMessage.setConversation(mConversation);
+            mWorkingMessage.setSubject(msgItem.mSubject, false);
+        } else {
+            if (getRecipients().size() > 1) {
+                //if the number is more than one when send sms, there will show serveral msg items
+                //the recipient of msg item is not equal with recipients of conversation
+                //so we should record the recipient of this msg item.
+                mWorkingMessage.setResendMultiRecipients(true);
+                mResendSmsRecipient = msgItem.mAddress;
+            }
+
+            editSmsMessageItem(msgItem);
+        }
+
+        sendMessage(true);
+    }
+
     /**
      * Context menu handlers for the message list view.
      */
@@ -1393,6 +1433,10 @@ public class ComposeMessageActivity extends Activity
 
                 case MENU_FORWARD_MESSAGE:
                     forwardMessage(mMsgItem);
+                    return true;
+
+                case MENU_RESEND:
+                    resendMessage(mMsgItem);
                     return true;
 
                 case MENU_VIEW_SLIDESHOW:
@@ -1867,12 +1911,17 @@ public class ComposeMessageActivity extends Activity
             View stubView = stub.inflate();
             mRecipientsEditor = (RecipientsEditor) stubView.findViewById(R.id.recipients_editor);
             mRecipientsPicker = (ImageButton) stubView.findViewById(R.id.recipients_picker);
+            mRecipientsSelector = (ImageButton) stubView.findViewById(R.id.recipients_selector);
+            mRecipientsSelector.setVisibility(View.VISIBLE);
         } else {
             mRecipientsEditor = (RecipientsEditor)findViewById(R.id.recipients_editor);
             mRecipientsEditor.setVisibility(View.VISIBLE);
             mRecipientsPicker = (ImageButton)findViewById(R.id.recipients_picker);
+            mRecipientsSelector = (ImageButton)findViewById(R.id.recipients_selector);
+            mRecipientsSelector.setVisibility(View.VISIBLE);
         }
         mRecipientsPicker.setOnClickListener(this);
+        mRecipientsSelector.setOnClickListener(this);
 
         mRecipientsEditor.setAdapter(new ChipsRecipientAdapter(this));
         mRecipientsEditor.populate(recipients);
@@ -3222,10 +3271,27 @@ public class ComposeMessageActivity extends Activity
                 showContactInfoDialog(data.getData());
                 break;
 
+            case REQUEST_CODE_ADD_RECIPIENTS:
+                insertNumbersIntoRecipientsEditor(
+                        data.getStringArrayListExtra(SelectRecipientsList.EXTRA_RECIPIENTS));
+                break;
+
             default:
                 if (LogTag.VERBOSE) log("bail due to unknown requestCode=" + requestCode);
                 break;
         }
+    }
+
+    private void insertNumbersIntoRecipientsEditor(final ArrayList<String> numbers) {
+        ContactList list = ContactList.getByNumbers(numbers, true);
+        ContactList existing = mRecipientsEditor.constructContactsFromInput(true);
+        for (Contact contact : existing) {
+            if (!contact.existsInDatabase()) {
+                list.add(contact);
+            }
+        }
+        mRecipientsEditor.setText(null);
+        mRecipientsEditor.populate(list);
     }
 
     private void processPickResult(final Intent data) {
@@ -3587,11 +3653,15 @@ public class ComposeMessageActivity extends Activity
     public void onClick(View v) {
         if ((v == mSendButtonSms || v == mSendButtonMms) && isPreparedForSending()) {
             confirmSendMessageIfNeeded();
-        } else if ((v == mRecipientsPicker)) {
+        } else if (v == mRecipientsPicker) {
             launchMultiplePhonePicker();
-        }
-        else if((v == mQuickEmoji)) {
+        } else if (v == mQuickEmoji) {
             showEmojiDialog();
+        } else if (v == mRecipientsSelector) {
+            Intent intent = new Intent(ComposeMessageActivity.this, SelectRecipientsList.class);
+            ContactList contacts = mRecipientsEditor.constructContactsFromInput(false);
+            intent.putExtra(SelectRecipientsList.EXTRA_RECIPIENTS, contacts.getNumbers());
+            startActivityForResult(intent, REQUEST_CODE_ADD_RECIPIENTS);
         }
     }
 
@@ -3975,7 +4045,13 @@ public class ComposeMessageActivity extends Activity
 
             // strip unicode chars before sending (if applicable)
             mWorkingMessage.setText(stripUnicodeIfRequested(mWorkingMessage.getText()));
-            mWorkingMessage.send(mDebugRecipients);
+
+            if (mWorkingMessage.getResendMultiRecipients()) {
+                //if resend sms recipient is more than one, use mResendSmsRecipient
+                mWorkingMessage.send(mResendSmsRecipient);
+            } else {
+                mWorkingMessage.send(mDebugRecipients);
+            }
 
             mSentMessage = true;
             mSendingMessage = true;
