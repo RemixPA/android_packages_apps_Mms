@@ -151,7 +151,6 @@
     <string name="label_mms_push">MMS Push</string>
     <string name="desc_mms_push">Pushes MMS from outbox to the network</string>
 
-<<<<<<< HEAD
     <!-- Blacklist preferences -->
     <string name="blacklist_title">Blacklist</string>
     <string name="blacklist_summary_disabled">Disabled</string>
