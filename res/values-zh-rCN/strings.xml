@@ -342,6 +342,10 @@
     <string name="notification_separator" msgid="2334673105226536422">"  "</string>
     <string name="enumeration_comma" msgid="213598026698964628">"、 "</string>
     <string name="message_timestamp_format" msgid="4188999027493614617">"<xliff:g id="STRING_0">%1$s</xliff:g> - <xliff:g id="STRING_1">%2$s</xliff:g>"</string>
+    
+    <!-- Screen on when SMS/MMS is received -->
+    <string name="pref_title_wake_screen_on_incoming_sms">收到新信息亮起屏幕</string>
+    <string name="pref_summary_wake_screen_on_incoming_sms">如果收到了新信息屏幕将会亮起</string> 
 
     <!-- Gray hint displayed in the search field in Contacts when empty -->
     <string name="search_bar_hint">"搜索联系人"</string>
