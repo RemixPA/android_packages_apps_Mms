@@ -98,4 +98,31 @@
     <string name="blacklist_title">黑名单</string>
     <string name="blacklist_summary_disabled">已禁用</string>
     <string name="blacklist_summary">黑名单中的号码发来的短信会被拦截</string>
+    <!-- Blacklist notifications -->
+    <string name="blacklist_notification">从 %s 拦截到一条新信息</string>
+    <string name="blacklist_notification_private_number">从私人号码拦截到一条新信息</string>
+    <string name="blacklist_notification_list_private">私人</string>
+    <string name="blacklist_notification_unknown_number">从未知号码 %s 拦截到一条新信息</string>
+    <string name="blacklist_notification_multiple"><xliff:g id="count">%d</xliff:g> 条信息被拦截</string>
+    <string name="unblock_number">解锁</string>
+
+    <!-- Blacklist management -->
+    <string name="add_to_blacklist">添加到黑名单</string>
+    <string name="add_to_blacklist_message">所有来自 %s 的信息将被拦截</string>
+
+    <!-- Generic blacklist handling -->
+    <string name="alert_dialog_yes">是</string>
+    <string name="alert_dialog_no">否</string>
+
+    <!-- Toast when storage is full -->
+    <string name="storage_is_full">短信存储已满，请删除部分对话</string>
+
+    <!-- Multi recipients -->
+    <string name="select_recipients">选择收信人</string>
+    <string name="groups_header">群组</string>
+    <string name="no_recipients">无联系人</string>
+    <string name="no_recipients_mobile_only">未找到匹配的联系人.尝试去掉 \'仅手机号码\' 的条件</string>
+    <string name="menu_done">完成</string>
+    <string name="menu_mobile">仅手机号码</string>
+    <string name="menu_groups">显示群组</string>
 </resources>
