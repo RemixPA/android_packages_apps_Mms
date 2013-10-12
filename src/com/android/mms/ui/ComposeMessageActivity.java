@@ -259,8 +259,8 @@ public class ComposeMessageActivity extends Activity
     private static final int MENU_INSERT_EMOJI          = 33;
     private static final int MENU_ADD_TEMPLATE          = 34;
     private static final int MENU_ADD_TO_BLACKLIST      = 35;
-    private static final int MENU_ADD_TO_CALENDAR       = 35;
-    private static final int MENU_RESEND                = 36;
+    private static final int MENU_ADD_TO_CALENDAR       = 36;
+    private static final int MENU_RESEND                = 37;
 
     private static final int DIALOG_TEMPLATE_SELECT     = 1;
     private static final int DIALOG_TEMPLATE_NOT_AVAILABLE = 2;
