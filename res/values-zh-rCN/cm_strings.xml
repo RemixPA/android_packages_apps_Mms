@@ -125,4 +125,14 @@
     <string name="menu_done">完成</string>
     <string name="menu_mobile">仅手机号码</string>
     <string name="menu_groups">显示群组</string>
+    
+    <!-- Delay delivery -->
+    <string name="pref_title_send_delay">延迟发送</string>
+    <string name="send_delay_immediate">立即</string>
+    <string name="send_delay_3seconds">3 秒</string>
+    <string name="send_delay_5seconds">5 秒</string>
+    <string name="send_delay_10seconds">10 秒</string>
+    <string name="send_delay_20seconds">20 秒</string>
+    <string name="send_delay_30seconds">30 秒</string>
+    <string name="sent_countdown">信息发送倒计时</string>
 </resources>
